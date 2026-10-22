@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klasifikasi Data dengan Himpunan</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#1b1f3a;--mut:#5d6384;--line:#d9dcec;--a:#2f5bea;--b:#e0457b;--c:#12a37f;--hl:#ffd23f}
+@media (prefers-color-scheme:dark){:root{--bg:#12142a;--card:#1b1e3a;--ink:#eef0ff;--mut:#a3a8cc;--line:#343862}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+header{padding:28px 20px 8px;max-width:1000px;margin:auto}
+h1{margin:0;font-size:1.7rem}
+header p{margin:4px 0 0;color:var(--mut)}
+main{max-width:1000px;margin:auto;padding:12px 20px 40px;display:grid;gap:16px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
+h2{margin:0 0 10px;font-size:1.1rem}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+label{display:grid;gap:3px;font-size:.85rem;color:var(--mut)}
+input,select,button,textarea{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+button{background:var(--a);color:#fff;border:0;cursor:pointer;font-weight:600}
+button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--hl)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.chip{display:inline-block;padding:2px 9px;margin:2px;border-radius:99px;background:var(--bg);border:1px solid var(--line);font-size:.85rem}
+.ok{color:#12a37f;font-weight:600}.bad{color:#e0457b;font-weight:600}
+code,.f{font-family:ui-monospace,Consolas,monospace}
+.f{background:var(--bg);padding:10px;border-radius:6px;overflow-x:auto;font-size:.88rem;white-space:pre}
+svg{width:100%;height:auto;max-width:520px;display:block;margin:auto}
+.mut{color:var(--mut);font-size:.85rem}
+</style>
+</head>
+<body>
+<header>
+<h1>Sistem Klasifikasi Data dengan Himpunan</h1>
+<p>PJBL-2 Sesi 2 · Operasi himpunan, Diagram Venn otomatis, dan Prinsip Inklusi-Eksklusi</p>
+</header>
+<main>
+
+<section>
+<h2>1. Dataset</h2>
+<div class="row">
+<label>Pilih dataset contoh
+<select id="ds"><option value="0">Dataset 1: Mahasiswa (12 orang)</option><option value="1">Dataset 2: Peserta pelatihan (10 orang)</option></select></label>
+<button id="load">Muat dataset</button>
+</div>
+<p class="mut">Tambah data baru. Minat dipilih dari A (Pemrograman), B (Desain), C (Jaringan).</p>
+<div class="row">
+<label>ID<input id="fid" size="5" placeholder="M13"></label>
+<label>Nama<input id="fnm" size="12" placeholder="Nama"></label>
+<label>Angkatan<input id="fan" size="6" placeholder="2025"></label>
+<label>Minat
+<span class="row" style="gap:6px;align-items:center">
+<span><input type="checkbox" id="cA">A</span><span><input type="checkbox" id="cB">B</span><span><input type="checkbox" id="cC">C</span></span></label>
+<button id="add">Tambah data</button>
+<button class="sec" id="clr">Kosongkan</button>
+</div>
+<p id="msg" class="mut" role="status"></p>
+<div class="scroll"><table id="tbl"></table></div>
+</section>
+
+<section>
+<h2>2. Operasi himpunan</h2>
+<div class="row">
+<label>Himpunan X<select id="x"><option value="0">A (Pemrograman)</option><option value="1">B (Desain)</option><option value="2">C (Jaringan)</option></select></label>
+<label>Operasi<select id="op">
+<option value="u">X ∪ Y (union)</option><option value="i">X ∩ Y (irisan)</option>
+<option value="d">X − Y (selisih)</option><option value="c">X' (komplemen X, tanpa Y)</option></select></label>
+<label>Himpunan Y<select id="y"><option value="0">A (Pemrograman)</option><option value="1" selected>B (Desain)</option><option value="2">C (Jaringan)</option></select></label>
+<button id="run">Hitung</button>
+</div>
+<div class="grid2" style="margin-top:14px">
+<div><svg id="venn" viewBox="0 0 520 420" role="img" aria-label="Diagram Venn A, B, C"></svg></div>
+<div>
+<p><b id="rtitle"></b></p>
+<p id="rres"></p>
+<div class="f" id="rf"></div>
+</div>
+</div>
+</section>
+
+<section>
+<h2>3. Prinsip Inklusi-Eksklusi</h2>
+<div class="f" id="ie2"></div><br>
+<div class="f" id="ie3"></div>
+</section>
+
+<section>
+<h2>4. Pengujian (2 dataset contoh)</h2>
+<p class="mut">Hasil fungsi himpunan (Set JavaScript) dibandingkan dengan hitungan manual lewat filter, lalu rumus inklusi-eksklusi dicek terhadap |A ∪ B ∪ C|.</p>
+<button id="test">Jalankan pengujian</button>
+<div class="scroll"><table id="ttbl" style="margin-top:10px"></table></div>
+</section>
+
+</main>
+<script>
+const NAMA=['A','B','C'],LBL=['Pemrograman','Desain','Jaringan'];
+const DATASETS=[
+ [['M01','Rina',2024,'A,B'],['M02','Budi',2024,'A'],['M03','Sari',2025,'B,C'],['M04','Dedi',2024,'C'],['M05','Eka',2025,'A,B,C'],['M06','Fajar',2025,'A'],['M07','Gita',2024,'B'],['M08','Hadi',2025,'A,C'],['M09','Indah',2024,'B'],['M10','Joko',2025,'C'],['M11','Kiki',2024,'A,B'],['M12','Lina',2025,'']],
+ [['P01','Ayu',2023,'A'],['P02','Bima',2023,'A,C'],['P03','Citra',2024,'B'],['P04','Dewa',2024,'B,C'],['P05','Eko',2023,'A,B,C'],['P06','Fira',2024,'C'],['P07','Gani',2023,'A,B'],['P08','Hani',2024,''],['P09','Imam',2023,'C'],['P10','Jihan',2024,'A']]
+];
+let data=[];
+const $=id=>document.getElementById(id);
+
+/* ---- Fungsi himpunan (pakai objek Set JavaScript) ---- */
+const himpunan=(k)=>new Set(data.filter(r=>r[3].split(',').includes(NAMA[k])).map(r=>r[0]));
+const semesta=()=>new Set(data.map(r=>r[0]));
+const union=(a,b)=>new Set([...a,...b]);
+const inter=(a,b)=>new Set([...a].filter(v=>b.has(v)));
+const diff=(a,b)=>new Set([...a].filter(v=>!b.has(v)));
+const comp=(a,U)=>diff(U,a);
+const fmt=s=>'{'+[...s].join(', ')+'}';
+
+function hitung(op,x,y,sets,U){
+ if(op==='u')return union(sets[x],sets[y]);
+ if(op==='i')return inter(sets[x],sets[y]);
+ if(op==='d')return diff(sets[x],sets[y]);
+ return comp(sets[x],U);
+}
+/* pola daerah Venn [a,b,c] -> apakah masuk hasil operasi */
+function polaMasuk(op,x,y,p){
+ if(op==='u')return p[x]||p[y];
+ if(op==='i')return p[x]&&p[y];
+ if(op==='d')return p[x]&&!p[y];
+ return !p[x];
+}
+function daerah(sets,U){
+ const m={};
+ for(const id of U){const k=[0,1,2].map(i=>sets[i].has(id)?1:0).join('');m[k]=(m[k]||0)+1}
+ return m;
+}
+
+/* ---- Tampilan ---- */
+function tabel(){
+ $('tbl').innerHTML='<tr><th>ID</th><th>Nama</th><th>Angkatan</th><th>Minat</th></tr>'+
+ data.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]?r[3].split(',').map(k=>NAMA.indexOf(k)>=0?k+' ('+LBL[NAMA.indexOf(k)]+')':k).join(', '):'(belum ada)'}</td></tr>`).join('');
+}
+const POS={'100':[140,125],'010':[380,125],'001':[260,350],'110':[260,115],'101':[190,245],'011':[330,245],'111':[260,195]};
+function venn(m,op,x,y,tampil){
+ const col=['#2f5bea','#e0457b','#12a37f'];
+ let s='<rect x="4" y="4" width="512" height="412" rx="8" fill="none" stroke="currentColor" opacity=".35"/><text x="14" y="26" font-size="14" fill="currentColor">U</text>';
+ [[190,170],[330,170],[260,285]].forEach((c,i)=>{s+=`<circle cx="${c[0]}" cy="${c[1]}" r="110" fill="${col[i]}" fill-opacity=".18" stroke="${col[i]}" stroke-width="2.5"/>`});
+ s+=`<text x="95" y="75" font-size="16" font-weight="700" fill="${col[0]}">A</text><text x="420" y="75" font-size="16" font-weight="700" fill="${col[1]}">B</text><text x="260" y="408" text-anchor="middle" font-size="16" font-weight="700" fill="${col[2]}">C</text>`;
+ const semua=Object.assign({},POS,{'000':[470,385]});
+ for(const k in semua){
+  const p=k.split('').map(Number),on=tampil&&polaMasuk(op,x,y,p),[cx,cy]=semua[k];
+  if(on)s+=`<circle cx="${cx}" cy="${cy}" r="21" fill="#ffd23f" stroke="#b58900" stroke-width="2"/>`;
+  s+=`<text x="${cx}" y="${cy+6}" text-anchor="middle" font-size="18" font-weight="700" fill="${on?'#1b1f3a':'currentColor'}">${m[k]||0}</text>`;
+ }
+ $('venn').innerHTML=s;
+}
+function inklusi(sets,U){
+ const [A,B,C]=sets,ab=inter(A,B),ac=inter(A,C),bc=inter(B,C),abc=inter(ab,C);
+ const gab=union(A,B),gall=union(gab,C);
+ const l2=A.size+B.size-ab.size;
+ $('ie2').textContent=`Dua himpunan (A dan B)\n|A ∪ B| = |A| + |B| − |A ∩ B|\n       = ${A.size} + ${B.size} − ${ab.size} = ${l2}\nHitung langsung: ${gab.size}  ${l2===gab.size?'✓ cocok':'✗ berbeda'}`;
+ const l3=A.size+B.size+C.size-ab.size-ac.size-bc.size+abc.size;
+ $('ie3').textContent=`Tiga himpunan (A, B, C)\n|A ∪ B ∪ C| = |A|+|B|+|C| − |A∩B| − |A∩C| − |B∩C| + |A∩B∩C|\n           = ${A.size}+${B.size}+${C.size} − ${ab.size} − ${ac.size} − ${bc.size} + ${abc.size} = ${l3}\nHitung langsung: ${gall.size}  ${l3===gall.size?'✓ cocok':'✗ berbeda'}\nTanpa minat (U − gabungan): ${U.size-gall.size} orang`;
+}
+function jalankan(){
+ const U=semesta(),sets=[0,1,2].map(himpunan);
+ const op=$('op').value,x=+$('x').value,y=+$('y').value;
+ const r=hitung(op,x,y,sets,U);
+ const X=NAMA[x],Y=NAMA[y];
+ const nm={u:`${X} ∪ ${Y}`,i:`${X} ∩ ${Y}`,d:`${X} − ${Y}`,c:`${X}'`}[op];
+ $('rtitle').textContent=`Hasil ${nm}: ${r.size} anggota`;
+ $('rres').innerHTML=[...r].map(id=>`<span class="chip">${id} ${data.find(d=>d[0]===id)[1]}</span>`).join('')||'<span class="mut">Himpunan kosong (∅)</span>';
+ $('rf').textContent=`${X} = ${fmt(sets[x])}\n${op==='c'?'U = '+fmt(U):Y+' = '+fmt(sets[y])}\n${nm} = ${fmt(r)}`;
+ venn(daerah(sets,U),op,x,y,true);
+ inklusi(sets,U);
+}
+function muat(i){data=DATASETS[i].map(r=>r.slice());tabel();jalankan()}
+
+/* ---- Event ---- */
+$('load').onclick=()=>muat(+$('ds').value);
+$('run').onclick=jalankan;
+['x','y','op'].forEach(i=>$(i).onchange=jalankan);
+$('add').onclick=()=>{
+ const id=$('fid').value.trim(),nm=$('fnm').value.trim(),an=$('fan').value.trim();
+ const mn=['A','B','C'].filter(k=>$('c'+k).checked).join(',');
+ if(!id||!nm||!an){$('msg').textContent='Isi ID, nama, dan angkatan terlebih dahulu.';return}
+ if(data.some(r=>r[0]===id)){$('msg').textContent='ID '+id+' sudah dipakai. Gunakan ID lain.';return}
+ data.push([id,nm,an,mn]);$('msg').textContent=nm+' ditambahkan.';
+ ['fid','fnm','fan'].forEach(i=>$(i).value='');['A','B','C'].forEach(k=>$('c'+k).checked=false);
+ tabel();jalankan();
+};
+$('clr').onclick=()=>{data=[];$('msg').textContent='Dataset dikosongkan. Tambahkan data lewat form.';tabel();jalankan()};
+
+/* ---- Pengujian ---- */
+$('test').onclick=()=>{
+ const simpan=data;let h='<tr><th>Dataset</th><th>Uji</th><th>Hasil</th></tr>';
+ DATASETS.forEach((d,n)=>{
+  data=d.map(r=>r.slice());
+  const U=semesta(),S=[0,1,2].map(himpunan),[A,B,C]=S;
+  const man=k=>d.filter(r=>r[3].split(',').includes(NAMA[k])).length;
+  const eq=(a,b)=>a.size===b.length&&b.every(v=>a.has(v));
+  const has=(r,k)=>r[3].split(',').includes(NAMA[k]);
+  const T=[
+   ['|A|, |B|, |C| sesuai hitungan manual',A.size===man(0)&&B.size===man(1)&&C.size===man(2)],
+   ['A ∪ B',eq(union(A,B),d.filter(r=>has(r,0)||has(r,1)).map(r=>r[0]))],
+   ['A ∩ B',eq(inter(A,B),d.filter(r=>has(r,0)&&has(r,1)).map(r=>r[0]))],
+   ['A − B',eq(diff(A,B),d.filter(r=>has(r,0)&&!has(r,1)).map(r=>r[0]))],
+   ["A' (komplemen)",eq(comp(A,U),d.filter(r=>!has(r,0)).map(r=>r[0]))],
+   ['Inklusi-eksklusi 3 himpunan',A.size+B.size+C.size-inter(A,B).size-inter(A,C).size-inter(B,C).size+inter(inter(A,B),C).size===union(union(A,B),C).size],
+   ['|A| + |A\'| = |U|',A.size+comp(A,U).size===U.size]
+  ];
+  T.forEach(t=>h+=`<tr><td>Dataset ${n+1} (${d.length} data)</td><td>${t[0]}</td><td class="${t[1]?'ok':'bad'}">${t[1]?'Lulus':'Gagal'}</td></tr>`);
+ });
+ data=simpan;$('ttbl').innerHTML=h;
+};
+muat(0);
+</script>
+</body>
+</html>
