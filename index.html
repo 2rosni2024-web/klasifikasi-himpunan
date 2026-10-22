@@ -48,7 +48,12 @@ svg{width:100%;height:auto;max-width:520px;display:block;margin:auto}
 <select id="ds"><option value="0">Dataset 1: Mahasiswa (12 orang)</option><option value="1">Dataset 2: Peserta pelatihan (10 orang)</option></select></label>
 <button id="load">Muat dataset</button>
 </div>
-<p class="mut">Tambah data baru. Minat dipilih dari A (Pemrograman), B (Desain), C (Jaringan).</p>
+<div class="row" style="margin-top:12px">
+<label>Unggah file CSV (kolom: id, nama, angkatan, minat)<input type="file" id="csv" accept=".csv,text/csv,text/plain"></label>
+<button class="sec" id="tpl">Unduh contoh CSV</button>
+</div>
+<p class="mut">Di kolom minat, pisahkan dengan tanda | , misalnya A|B. Boleh juga ditulis Pemrograman|Desain. Kosongkan jika tanpa minat.</p>
+<p class="mut">Tambah data baru lewat form. Minat dipilih dari A (Pemrograman), B (Desain), C (Jaringan).</p>
 <div class="row">
 <label>ID<input id="fid" size="5" placeholder="M13"></label>
 <label>Nama<input id="fnm" size="12" placeholder="Nama"></label>
@@ -74,7 +79,7 @@ svg{width:100%;height:auto;max-width:520px;display:block;margin:auto}
 <button id="run">Hitung</button>
 </div>
 <div class="grid2" style="margin-top:14px">
-<div><svg id="venn" viewBox="0 0 520 420" role="img" aria-label="Diagram Venn A, B, C"></svg></div>
+<div><svg id="venn" viewBox="0 0 520 420" role="img" aria-label="Diagram Venn A, B, C"></svg><p class="mut" style="text-align:center">Arahkan kursor ke angka untuk melihat anggotanya.</p><div class="mut" id="isi"></div></div>
 <div>
 <p><b id="rtitle"></b></p>
 <p id="rres"></p>
@@ -130,7 +135,7 @@ function polaMasuk(op,x,y,p){
 }
 function daerah(sets,U){
  const m={};
- for(const id of U){const k=[0,1,2].map(i=>sets[i].has(id)?1:0).join('');m[k]=(m[k]||0)+1}
+ for(const id of U){const k=[0,1,2].map(i=>sets[i].has(id)?1:0).join('');(m[k]=m[k]||[]).push(id)}
  return m;
 }
 
@@ -141,18 +146,27 @@ function tabel(){
 }
 const POS={'100':[140,125],'010':[380,125],'001':[260,350],'110':[260,115],'101':[190,245],'011':[330,245],'111':[260,195]};
 function venn(m,op,x,y,tampil){
- const col=['#2f5bea','#e0457b','#12a37f'];
- let s='<rect x="4" y="4" width="512" height="412" rx="8" fill="none" stroke="currentColor" opacity=".35"/><text x="14" y="26" font-size="14" fill="currentColor">U</text>';
- [[190,170],[330,170],[260,285]].forEach((c,i)=>{s+=`<circle cx="${c[0]}" cy="${c[1]}" r="110" fill="${col[i]}" fill-opacity=".18" stroke="${col[i]}" stroke-width="2.5"/>`});
- s+=`<text x="95" y="75" font-size="16" font-weight="700" fill="${col[0]}">A</text><text x="420" y="75" font-size="16" font-weight="700" fill="${col[1]}">B</text><text x="260" y="408" text-anchor="middle" font-size="16" font-weight="700" fill="${col[2]}">C</text>`;
+ const col=['#2f5bea','#e0457b','#12a37f'],C=[[190,170],[330,170],[260,285]];
+ const n=k=>(m[k]||[]).length;
  const semua=Object.assign({},POS,{'000':[470,385]});
+ const hl=Object.keys(semua).filter(k=>tampil&&polaMasuk(op,x,y,k.split('').map(Number)));
+ let s='<defs>'+C.map((c,i)=>`<clipPath id="c${i}"><circle cx="${c[0]}" cy="${c[1]}" r="110"/></clipPath>`).join('');
+ hl.forEach(k=>{s+=`<mask id="mk${k}"><rect x="0" y="0" width="520" height="420" fill="#fff"/>`+k.split('').map((b,i)=>b==='0'?`<circle cx="${C[i][0]}" cy="${C[i][1]}" r="110" fill="#000"/>`:'').join('')+'</mask>'});
+ s+='</defs><rect x="4" y="4" width="512" height="412" rx="8" fill="none" stroke="currentColor" opacity=".35"/><text x="14" y="26" font-size="14" fill="currentColor">U</text>';
+ C.forEach((c,i)=>{s+=`<circle cx="${c[0]}" cy="${c[1]}" r="110" fill="${col[i]}" fill-opacity=".15"/>`});
+ hl.forEach(k=>{
+  const one=k.split('').filter(b=>b==='1').length;
+  s+=k.split('').map((b,i)=>b==='1'?`<g clip-path="url(#c${i})">`:'').join('')+`<rect x="4" y="4" width="512" height="412" fill="#ffd23f" fill-opacity=".9" mask="url(#mk${k})"/>`+'</g>'.repeat(one);
+ });
+ C.forEach((c,i)=>{s+=`<circle cx="${c[0]}" cy="${c[1]}" r="110" fill="none" stroke="${col[i]}" stroke-width="2.5"/>`});
+ s+=`<text x="95" y="75" font-size="16" font-weight="700" fill="${col[0]}">A</text><text x="420" y="75" font-size="16" font-weight="700" fill="${col[1]}">B</text><text x="260" y="408" text-anchor="middle" font-size="16" font-weight="700" fill="${col[2]}">C</text>`;
  for(const k in semua){
-  const p=k.split('').map(Number),on=tampil&&polaMasuk(op,x,y,p),[cx,cy]=semua[k];
-  if(on)s+=`<circle cx="${cx}" cy="${cy}" r="21" fill="#ffd23f" stroke="#b58900" stroke-width="2"/>`;
-  s+=`<text x="${cx}" y="${cy+6}" text-anchor="middle" font-size="18" font-weight="700" fill="${on?'#1b1f3a':'currentColor'}">${m[k]||0}</text>`;
+  const on=hl.includes(k),[cx,cy]=semua[k];
+  s+=`<text x="${cx}" y="${cy+6}" text-anchor="middle" font-size="18" font-weight="700" fill="${on?'#1b1f3a':'currentColor'}"><title>${(m[k]||[]).join(', ')||'kosong'}</title>${n(k)}</text>`;
  }
  $('venn').innerHTML=s;
 }
+const NAMA_DAERAH={'100':'Hanya A','010':'Hanya B','001':'Hanya C','110':'A dan B saja','101':'A dan C saja','011':'B dan C saja','111':'A, B, dan C','000':'Di luar semua himpunan'};
 function inklusi(sets,U){
  const [A,B,C]=sets,ab=inter(A,B),ac=inter(A,C),bc=inter(B,C),abc=inter(ab,C);
  const gab=union(A,B),gall=union(gab,C);
@@ -170,7 +184,8 @@ function jalankan(){
  $('rtitle').textContent=`Hasil ${nm}: ${r.size} anggota`;
  $('rres').innerHTML=[...r].map(id=>`<span class="chip">${id} ${data.find(d=>d[0]===id)[1]}</span>`).join('')||'<span class="mut">Himpunan kosong (∅)</span>';
  $('rf').textContent=`${X} = ${fmt(sets[x])}\n${op==='c'?'U = '+fmt(U):Y+' = '+fmt(sets[y])}\n${nm} = ${fmt(r)}`;
- venn(daerah(sets,U),op,x,y,true);
+ const m=daerah(sets,U);venn(m,op,x,y,true);
+ $('isi').innerHTML=Object.keys(NAMA_DAERAH).map(k=>`<div><b>${NAMA_DAERAH[k]}</b> (${(m[k]||[]).length}): ${(m[k]||[]).join(', ')||'-'}</div>`).join('');
  inklusi(sets,U);
 }
 function muat(i){data=DATASETS[i].map(r=>r.slice());tabel();jalankan()}
@@ -187,6 +202,49 @@ $('add').onclick=()=>{
  data.push([id,nm,an,mn]);$('msg').textContent=nm+' ditambahkan.';
  ['fid','fnm','fan'].forEach(i=>$(i).value='');['A','B','C'].forEach(k=>$('c'+k).checked=false);
  tabel();jalankan();
+};
+/* ---- Unggah CSV ---- */
+function bagi(l,d){const o=[];let c='',q=false;for(const ch of l){if(ch==='"')q=!q;else if(ch===d&&!q){o.push(c);c=''}else c+=ch}o.push(c);return o.map(s=>s.trim())}
+function bacaCSV(teks){
+ const baris=teks.replace(/^\uFEFF/,'').replace(/\r/g,'').split('\n').filter(l=>l.trim());
+ if(!baris.length)throw new Error('File kosong.');
+ const d=baris[0].includes(',')?',':';';
+ const hasil=[],ada=new Set();let abaikan=0;
+ baris.forEach((l,n)=>{
+  const k=bagi(l,d);
+  if(n===0&&k[0].toLowerCase()==='id')return;
+  if(k.length<3||!k[0])throw new Error('Baris '+(n+1)+' tidak lengkap. Format: id, nama, angkatan, minat.');
+  if(ada.has(k[0]))throw new Error('ID '+k[0]+' muncul dua kali (baris '+(n+1)+').');
+  ada.add(k[0]);
+  const huruf=[];
+  k.slice(3).join('|').split(/[|;\/,]/).map(s=>s.trim()).filter(Boolean).forEach(t=>{
+   let i=NAMA.indexOf(t.toUpperCase());
+   if(i<0)i=LBL.findIndex(x=>x.toLowerCase()===t.toLowerCase());
+   if(i<0)abaikan++;else if(!huruf.includes(NAMA[i]))huruf.push(NAMA[i]);
+  });
+  hasil.push([k[0],k[1],k[2],huruf.join(',')]);
+ });
+ if(!hasil.length)throw new Error('Tidak ada data yang terbaca.');
+ return {hasil,abaikan};
+}
+$('csv').onchange=e=>{
+ const f=e.target.files[0];if(!f)return;
+ const r=new FileReader();
+ r.onload=()=>{
+  try{
+   const {hasil,abaikan}=bacaCSV(r.result);
+   data=hasil;tabel();jalankan();
+   $('msg').textContent=hasil.length+' data dari '+f.name+' berhasil dimuat.'+(abaikan?' '+abaikan+' minat tidak dikenali dan diabaikan.':'');
+  }catch(err){$('msg').textContent='Gagal membaca CSV: '+err.message}
+  e.target.value='';
+ };
+ r.readAsText(f);
+};
+$('tpl').onclick=()=>{
+ const isi='id,nama,angkatan,minat\n'+DATASETS[0].map(r=>[r[0],r[1],r[2],r[3].split(',').filter(Boolean).join('|')].join(',')).join('\n')+'\n';
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob([isi],{type:'text/csv'}));
+ a.download='contoh-dataset.csv';a.click();
 };
 $('clr').onclick=()=>{data=[];$('msg').textContent='Dataset dikosongkan. Tambahkan data lewat form.';tabel();jalankan()};
 
